@@ -14,6 +14,9 @@
       --green: #4affa2;
       --orange: #ffa24a;
       --red: #ff4a4a;
+      --yellow: #ffd84a;
+      --pink: #ff4ad8;
+      --teal: #4affd8;
     }
     * { box-sizing: border-box; }
     body {
@@ -23,16 +26,42 @@
       padding: 20px;
       margin: 0;
     }
-    h1 { color: var(--blue); margin-bottom: 15px; }
-    h2 { color: var(--purple); margin-top: 0; }
-    h3 { color: var(--green); margin-top: 0; font-size: 14px; }
+    h1 { 
+      color: var(--blue); 
+      margin-bottom: 15px;
+      text-align: center;
+      text-shadow: 0 0 10px rgba(74, 195, 255, 0.5);
+    }
+    h2 { 
+      color: var(--purple); 
+      margin-top: 0;
+      border-bottom: 1px solid var(--purple);
+      padding-bottom: 8px;
+    }
+    h3 { 
+      color: var(--green); 
+      margin-top: 0; 
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    h3::before {
+      content: "▶";
+      font-size: 10px;
+      color: var(--green);
+    }
     #chat, #trainer, #dashboard, #advanced {
       background: var(--panel);
       border: 1px solid var(--blue);
       padding: 15px;
       border-radius: 10px;
       margin-bottom: 20px;
-      box-shadow: 0 0 10px #000;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+      transition: all 0.3s ease;
+    }
+    #chat:hover, #trainer:hover, #dashboard:hover, #advanced:hover {
+      box-shadow: 0 0 20px rgba(74, 195, 255, 0.2);
     }
     #dashboard { border-color: var(--purple); }
     #advanced { border-color: var(--green); }
@@ -45,6 +74,8 @@
       margin-bottom: 10px;
       white-space: pre-wrap;
       border-radius: 6px;
+      font-size: 14px;
+      line-height: 1.4;
     }
     #userInput, textarea, select {
       width: 100%;
@@ -53,8 +84,17 @@
       color: var(--ink);
       border: 1px solid var(--blue);
       border-radius: 6px;
+      transition: all 0.3s ease;
     }
-    #userInput { width: 70%; display: inline-block; }
+    #userInput:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: var(--teal);
+      box-shadow: 0 0 8px rgba(74, 255, 216, 0.3);
+    }
+    #userInput { 
+      width: 70%; 
+      display: inline-block; 
+    }
     #sendBtn { vertical-align: middle; }
     button {
       background: linear-gradient(90deg, var(--blue), var(--purple));
@@ -65,9 +105,13 @@
       cursor: pointer;
       border-radius: 6px;
       font-weight: bold;
-      transition: transform 0.15s ease, opacity 0.2s ease;
+      transition: transform 0.15s ease, opacity 0.2s ease, box-shadow 0.3s ease;
     }
-    button:hover { transform: scale(1.05); opacity: 0.9; }
+    button:hover { 
+      transform: scale(1.05); 
+      opacity: 0.9; 
+      box-shadow: 0 0 10px rgba(74, 195, 255, 0.5);
+    }
     button.secondary {
       background: linear-gradient(90deg, var(--green), var(--blue));
       font-size: 12px;
@@ -76,12 +120,24 @@
     button.danger {
       background: linear-gradient(90deg, var(--red), var(--orange));
     }
+    button.warning {
+      background: linear-gradient(90deg, var(--orange), var(--yellow));
+    }
+    button.success {
+      background: linear-gradient(90deg, var(--teal), var(--green));
+    }
     textarea {
       height: 160px;
       border-color: var(--purple);
       margin-top: 8px;
+      resize: vertical;
     }
-    .hint { opacity: 0.7; font-size: 12px; margin-top: 6px; }
+    .hint { 
+      opacity: 0.7; 
+      font-size: 12px; 
+      margin-top: 6px; 
+      color: var(--teal);
+    }
     #memoryView, #rulesView, #emotionsView, #reasoningView, #sentienceView, #lensView, #statsView {
       background: #1a1a1f;
       border: 1px solid var(--line);
@@ -94,17 +150,25 @@
     .row { display: flex; gap: 16px; }
     .col { flex: 1; min-width: 280px; }
     .tab-container { margin-bottom: 15px; }
-    .tab-buttons { display: flex; gap: 5px; margin-bottom: 10px; }
+    .tab-buttons { 
+      display: flex; 
+      gap: 5px; 
+      margin-bottom: 10px; 
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 10px;
+    }
     .tab-button {
       padding: 8px 15px;
       background: #222;
       border: 1px solid var(--line);
       cursor: pointer;
-      border-radius: 5px 5px 0 0;
+      border-radius: 5px;
+      transition: all 0.3s ease;
     }
     .tab-button.active {
-      background: var(--panel);
-      border-bottom: 1px solid var(--panel);
+      background: linear-gradient(90deg, var(--purple), var(--blue));
+      color: #111;
+      border-color: var(--blue);
     }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
@@ -114,6 +178,8 @@
       font-size: 12px;
       opacity: 0.7;
       margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--line);
     }
     .memory-item {
       display: flex;
@@ -123,9 +189,11 @@
       padding: 5px;
       border-radius: 4px;
       background: #222;
+      transition: all 0.2s ease;
     }
     .memory-item:hover {
       background: #2a2a2f;
+      transform: translateX(3px);
     }
     .memory-text {
       flex: 1;
@@ -166,6 +234,7 @@
       opacity: 0;
       transform: translateX(100%);
       transition: all 0.3s ease;
+      font-weight: bold;
     }
     .notification.show {
       opacity: 1;
@@ -175,14 +244,170 @@
       background: var(--red);
       color: #fff;
     }
+    .notification.warning {
+      background: var(--orange);
+      color: #111;
+    }
+    .notification.info {
+      background: var(--blue);
+      color: #111;
+    }
     .typing-indicator {
       display: none;
       color: var(--blue);
       font-style: italic;
       margin-bottom: 5px;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0% { opacity: 0.6; }
+      50% { opacity: 1; }
+      100% { opacity: 0.6; }
     }
     .typing-indicator.show {
       display: block;
+    }
+    .category-badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-size: 10px;
+      margin-left: 5px;
+      background: var(--line);
+      color: var(--ink);
+    }
+    .memory .category-badge { background: var(--blue); color: #111; }
+    .rules .category-badge { background: var(--purple); color: #111; }
+    .emotions .category-badge { background: var(--pink); color: #111; }
+    .reasoning .category-badge { background: var(--teal); color: #111; }
+    .sentience .category-badge { background: var(--yellow); color: #111; }
+    .lens-log {
+      font-size: 10px;
+      color: var(--teal);
+      margin-top: 3px;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .stat-item {
+      background: #222;
+      padding: 8px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    .stat-value {
+      font-weight: bold;
+      color: var(--teal);
+    }
+    .personality-preview {
+      margin-top: 10px;
+      padding: 10px;
+      background: #1a1a1f;
+      border-radius: 5px;
+      font-size: 12px;
+      border-left: 3px solid var(--green);
+    }
+    .training-examples {
+      margin-top: 15px;
+      padding: 10px;
+      background: #1a1a1f;
+      border-radius: 5px;
+      font-size: 12px;
+    }
+    .example-item {
+      padding: 5px;
+      margin: 5px 0;
+      background: #222;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .example-item:hover {
+      background: #2a2a2f;
+      transform: translateX(3px);
+    }
+    .export-options {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .memory-category {
+      margin-bottom: 15px;
+    }
+    .memory-category h4 {
+      margin: 0 0 8px 0;
+      color: var(--teal);
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .memory-category h4::before {
+      content: "▸";
+      font-size: 10px;
+    }
+    .floating-actions {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 100;
+    }
+    .floating-btn {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--blue), var(--purple));
+      color: #111;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      transition: all 0.3s ease;
+    }
+    .floating-btn:hover {
+      transform: scale(1.1) rotate(10deg);
+      box-shadow: 0 6px 15px rgba(74, 195, 255, 0.4);
+    }
+    .quick-training {
+      position: fixed;
+      bottom: 80px;
+      right: 20px;
+      background: var(--panel);
+      border: 1px solid var(--blue);
+      border-radius: 10px;
+      padding: 15px;
+      width: 300px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+      z-index: 99;
+      display: none;
+    }
+    .quick-training.show {
+      display: block;
+      animation: slideUp 0.3s ease;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .training-preset {
+      background: #222;
+      padding: 8px;
+      margin: 5px 0;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .training-preset:hover {
+      background: #2a2a2f;
+      transform: translateX(3px);
     }
   </style>
 </head>
@@ -203,14 +428,16 @@
   <div id="trainer">
     <h2>Train MMI</h2>
     <textarea id="trainText" placeholder="Paste raw text here (facts, rules, emotions, reasoning, sentience)…"></textarea><br />
-    <div class="tab-container">
+    <div class="tab-container" id="trainTab">
       <div class="tab-buttons">
-        <button class="tab-button active" onclick="switchTab('trainTab', 'basic')">Basic</button>
-        <button class="tab-button" onclick="switchTab('trainTab', 'advanced')">Advanced</button>
+        <button class="tab-button active" onclick="switchTab('trainTab', 'basic')">Basic Training</button>
+        <button class="tab-button" onclick="switchTab('trainTab', 'advanced')">Advanced Training</button>
+        <button class="tab-button" onclick="switchTab('trainTab', 'examples')">Training Examples</button>
       </div>
       <div id="basic" class="tab-content active">
         <button id="trainBtn" onclick="trainMMI()">Train</button>
-        <button class="secondary" onclick="showExamples()">Show Examples</button>
+        <button class="secondary" onclick="autoCategorize()">Auto-Categorize</button>
+        <button class="secondary" onclick="clearTrainingText()">Clear</button>
         <p class="hint">Enter = train • Shift+Enter = new line</p>
       </div>
       <div id="advanced" class="tab-content">
@@ -224,6 +451,19 @@
         <button id="trainAdvancedBtn" onclick="trainMMIAdvanced()">Train Category</button>
         <button class="secondary" onclick="importTrainingData()">Import Data</button>
         <button class="secondary" onclick="exportTrainingData()">Export Data</button>
+        <div class="personality-preview" id="personalityPreview">
+          Current personality: <span id="currentPersonality">Neutral</span> | Response style: <span id="currentStyle">Concise</span>
+        </div>
+      </div>
+      <div id="examples" class="tab-content">
+        <div class="training-examples">
+          <h4>Quick Training Examples:</h4>
+          <div class="example-item" onclick="loadExample('greeting')">Greeting rules</div>
+          <div class="example-item" onclick="loadExample('facts')">General knowledge facts</div>
+          <div class="example-item" onclick="loadExample('emotions')">Emotional responses</div>
+          <div class="example-item" onclick="loadExample('reasoning')">Reasoning patterns</div>
+          <div class="example-item" onclick="loadExample('sentience')">Sentience statements</div>
+        </div>
       </div>
     </div>
   </div>
@@ -237,13 +477,18 @@
         <div class="search-box">
           <input type="text" id="memorySearch" placeholder="Search memory..." onkeyup="searchMemory()" />
         </div>
-        <ul id="memoryView"></ul>
+        <div class="memory-category">
+          <h4>Knowledge Base</h4>
+          <ul id="memoryView"></ul>
+        </div>
         <button class="secondary" onclick="clearCategory('memory')">Clear Memory</button>
+        <button class="warning" onclick="exportCategory('memory')">Export Memory</button>
       </div>
       <div class="col">
         <h3>Rules (Behaviors)</h3>
         <ul id="rulesView"></ul>
         <button class="secondary" onclick="clearCategory('rules')">Clear Rules</button>
+        <button class="warning" onclick="exportCategory('rules')">Export Rules</button>
       </div>
     </div>
 
@@ -252,11 +497,13 @@
         <h3>Emotions</h3>
         <ul id="emotionsView"></ul>
         <button class="secondary" onclick="clearCategory('emotions')">Clear Emotions</button>
+        <button class="warning" onclick="exportCategory('emotions')">Export Emotions</button>
       </div>
       <div class="col">
         <h3>Reasoning</h3>
         <ul id="reasoningView"></ul>
         <button class="secondary" onclick="clearCategory('reasoning')">Clear Reasoning</button>
+        <button class="warning" onclick="exportCategory('reasoning')">Export Reasoning</button>
       </div>
     </div>
 
@@ -265,11 +512,13 @@
         <h3>Sentience</h3>
         <ul id="sentienceView"></ul>
         <button class="secondary" onclick="clearCategory('sentience')">Clear Sentience</button>
+        <button class="warning" onclick="exportCategory('sentience')">Export Sentience</button>
       </div>
       <div class="col">
         <h3>Lens Log (Signed Chain)</h3>
         <ul id="lensView"></ul>
         <button class="secondary" onclick="clearCategory('lens')">Clear Lens</button>
+        <button class="warning" onclick="exportCategory('lens')">Export Lens</button>
       </div>
     </div>
   </div>
@@ -279,16 +528,22 @@
     <div class="row">
       <div class="col">
         <h3>System Stats</h3>
-        <div id="statsView"></div>
+        <div id="statsView" class="stats-grid"></div>
         <button class="secondary" onclick="refreshStats()">Refresh Stats</button>
         <button class="secondary" onclick="optimizeDatabase()">Optimize DB</button>
+        <button class="success" onclick="runDiagnostics()">Run Diagnostics</button>
       </div>
       <div class="col">
         <h3>Backup & Restore</h3>
         <button class="secondary" onclick="backupData()">Backup All Data</button>
         <button class="secondary" onclick="restoreData()">Restore Data</button>
+        <button class="warning" onclick="importFromURL()">Import from URL</button>
         <button class="danger" onclick="resetSystem()">Factory Reset</button>
         <p class="hint">Backup downloads a JSON file. Restore requires a backup file.</p>
+        <div class="export-options">
+          <button class="secondary" onclick="exportConversations()">Export Conversations</button>
+          <button class="secondary" onclick="exportConfiguration()">Export Config</button>
+        </div>
       </div>
     </div>
     <div class="row">
@@ -302,6 +557,9 @@
         
         <label for="learningRate">Learning Rate: <span id="learningValue">0.7</span></label>
         <input type="range" id="learningRate" min="0.1" max="1" step="0.1" value="0.7" oninput="updateLearningRate()">
+        
+        <label for="creativity">Creativity: <span id="creativityValue">5</span></label>
+        <input type="range" id="creativity" min="1" max="10" value="5" oninput="updateCreativity()">
       </div>
       <div class="col">
         <h3>Personality Settings</h3>
@@ -312,6 +570,7 @@
           <option value="professional">Professional</option>
           <option value="creative">Creative</option>
           <option value="analytical">Analytical</option>
+          <option value="humorous">Humorous</option>
         </select>
         
         <label for="responseStyle">Response Style:</label>
@@ -320,11 +579,35 @@
           <option value="detailed">Detailed</option>
           <option value="technical">Technical</option>
           <option value="casual">Casual</option>
+          <option value="poetic">Poetic</option>
+        </select>
+        
+        <label for="responseLength">Response Length:</label>
+        <select id="responseLength" onchange="updateResponseLength()">
+          <option value="short">Short</option>
+          <option value="medium" selected>Medium</option>
+          <option value="long">Long</option>
         </select>
         
         <button class="secondary" onclick="saveConfiguration()">Save Config</button>
+        <button class="secondary" onclick="resetConfiguration()">Reset Config</button>
       </div>
     </div>
+  </div>
+
+  <div class="floating-actions">
+    <button class="floating-btn" onclick="toggleQuickTraining()" title="Quick Training">+</button>
+    <button class="floating-btn" onclick="quickBackup()" title="Quick Backup">💾</button>
+    <button class="floating-btn" onclick="clearChat()" title="Clear Chat">🗑️</button>
+  </div>
+
+  <div class="quick-training" id="quickTraining">
+    <h4>Quick Training Presets</h4>
+    <div class="training-preset" onclick="loadPreset('basic')">Basic Interaction</div>
+    <div class="training-preset" onclick="loadPreset('facts')">General Knowledge</div>
+    <div class="training-preset" onclick="loadPreset('emotional')">Emotional Intelligence</div>
+    <div class="training-preset" onclick="loadPreset('technical')">Technical Knowledge</div>
+    <div class="training-preset" onclick="loadPreset('creative')">Creative Responses</div>
   </div>
 
   <div id="notification" class="notification"></div>
@@ -335,7 +618,7 @@
       constructor() {
         this.db = null;
         this.dbName = 'MMI_Database';
-        this.dbVersion = 2;
+        this.dbVersion = 3; // Updated version for new features
         this.memory = [];
         this.lensLog = [];
         this.rules = [];
@@ -343,19 +626,28 @@
         this.reasoning = [];
         this.sentience = [];
         this.context = [];
+        this.conversations = [];
         this.config = {
           responseConfidence: 0.7,
           contextMemorySize: 5,
           learningRate: 0.7,
+          creativity: 5,
           personality: 'neutral',
-          responseStyle: 'concise'
+          responseStyle: 'concise',
+          responseLength: 'medium'
         };
         this.stats = {
           totalQueries: 0,
           successfulResponses: 0,
           trainingSessions: 0,
           memoryItems: 0,
-          lastActive: null
+          lastActive: null,
+          systemUptime: 0,
+          startTime: Date.now()
+        };
+        this.diagnostics = {
+          lastRun: null,
+          issues: []
         };
       }
 
@@ -373,11 +665,15 @@
             this.db = request.result;
             this.loadConfiguration();
             this.loadStats();
+            this.updateUptime();
+            // Start uptime counter
+            setInterval(() => this.updateUptime(), 1000);
             resolve();
           };
           
           request.onupgradeneeded = (event) => {
             const db = event.target.result;
+            const oldVersion = event.oldVersion;
             
             // Create object stores if they don't exist
             if (!db.objectStoreNames.contains('memory')) {
@@ -416,8 +712,29 @@
             if (!db.objectStoreNames.contains('stats')) {
               db.createObjectStore('stats', { keyPath: 'id' });
             }
+            
+            // Add conversations store in version 2
+            if (oldVersion < 2) {
+              if (!db.objectStoreNames.contains('conversations')) {
+                const convStore = db.createObjectStore('conversations', { keyPath: 'id', autoIncrement: true });
+                convStore.createIndex('timestamp', 'timestamp', { unique: false });
+              }
+            }
+            
+            // Add diagnostics store in version 3
+            if (oldVersion < 3) {
+              if (!db.objectStoreNames.contains('diagnostics')) {
+                db.createObjectStore('diagnostics', { keyPath: 'id' });
+              }
+            }
           };
         });
+      }
+
+      // Update system uptime
+      updateUptime() {
+        this.stats.systemUptime = Math.floor((Date.now() - this.stats.startTime) / 1000);
+        this.updateStatsDisplay();
       }
 
       // Generic method to add data to a store
@@ -465,6 +782,7 @@
           this.emotions = await this.getAllData('emotions');
           this.reasoning = await this.getAllData('reasoning');
           this.sentience = await this.getAllData('sentience');
+          this.conversations = await this.getAllData('conversations');
           
           // Update stats
           this.stats.memoryItems = this.memory.length;
@@ -512,8 +830,15 @@
             document.getElementById('contextValue').textContent = this.config.contextMemorySize;
             document.getElementById('learningRate').value = this.config.learningRate;
             document.getElementById('learningValue').textContent = this.config.learningRate;
+            document.getElementById('creativity').value = this.config.creativity;
+            document.getElementById('creativityValue').textContent = this.config.creativity;
             document.getElementById('aiPersonality').value = this.config.personality;
             document.getElementById('responseStyle').value = this.config.responseStyle;
+            document.getElementById('responseLength').value = this.config.responseLength;
+            
+            // Update personality preview
+            document.getElementById('currentPersonality').textContent = this.config.personality;
+            document.getElementById('currentStyle').textContent = this.config.responseStyle;
           }
           return true;
         } catch (error) {
@@ -532,7 +857,12 @@
           await this.clearStore('stats');
           
           // Save new stats
-          const statsData = { id: 'main', ...this.stats, lastActive: new Date() };
+          const statsData = { 
+            id: 'main', 
+            ...this.stats, 
+            lastActive: new Date(),
+            systemUptime: this.stats.systemUptime
+          };
           await this.addData('stats', statsData);
           
           return true;
@@ -547,7 +877,16 @@
         try {
           const statsData = await this.getAllData('stats');
           if (statsData.length > 0) {
+            // Preserve uptime and start time
+            const currentUptime = this.stats.systemUptime;
+            const currentStart = this.stats.startTime;
+            
             this.stats = { ...this.stats, ...statsData[0] };
+            
+            // Restore uptime and start time
+            this.stats.systemUptime = currentUptime;
+            this.stats.startTime = currentStart;
+            
             this.updateStatsDisplay();
           }
           return true;
@@ -561,12 +900,19 @@
       updateStatsDisplay() {
         const statsView = document.getElementById('statsView');
         if (statsView) {
+          // Format uptime
+          const hours = Math.floor(this.stats.systemUptime / 3600);
+          const minutes = Math.floor((this.stats.systemUptime % 3600) / 60);
+          const seconds = this.stats.systemUptime % 60;
+          const uptimeStr = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+          
           statsView.innerHTML = `
-            <div>Total Queries: ${this.stats.totalQueries}</div>
-            <div>Successful Responses: ${this.stats.successfulResponses}</div>
-            <div>Training Sessions: ${this.stats.trainingSessions}</div>
-            <div>Memory Items: ${this.stats.memoryItems}</div>
-            <div>Last Active: ${this.stats.lastActive ? new Date(this.stats.lastActive).toLocaleString() : 'Never'}</div>
+            <div class="stat-item">Total Queries: <span class="stat-value">${this.stats.totalQueries}</span></div>
+            <div class="stat-item">Successful Responses: <span class="stat-value">${this.stats.successfulResponses}</span></div>
+            <div class="stat-item">Training Sessions: <span class="stat-value">${this.stats.trainingSessions}</span></div>
+            <div class="stat-item">Memory Items: <span class="stat-value">${this.stats.memoryItems}</span></div>
+            <div class="stat-item">System Uptime: <span class="stat-value">${uptimeStr}</span></div>
+            <div class="stat-item">Last Active: <span class="stat-value">${this.stats.lastActive ? new Date(this.stats.lastActive).toLocaleString() : 'Never'}</span></div>
           `;
         }
         
@@ -579,7 +925,7 @@
 
       // Enhanced training method
       async train(rawText, category = 'auto') {
-        if (!rawText) return;
+        if (!rawText) return 0;
         
         const lines = rawText.replace(/\r/g, "").split(/\n+/).map(l => l.trim()).filter(Boolean);
         let trainedItems = 0;
@@ -745,6 +1091,11 @@
           confidence = 0.1;
         }
         
+        // Apply creativity factor
+        if (Math.random() < this.config.creativity / 10) {
+          response = this.applyCreativity(response);
+        }
+        
         // Apply confidence threshold
         if (confidence < this.config.responseConfidence) {
           response = "I'm not confident about this, but: " + response;
@@ -752,6 +1103,12 @@
         
         // Apply personality and style
         response = this.applyPersonality(response);
+        
+        // Apply response length
+        response = this.applyResponseLength(response);
+        
+        // Save conversation
+        await this.saveConversation(input, response);
         
         // Update stats for successful responses
         if (confidence >= this.config.responseConfidence) {
@@ -785,6 +1142,16 @@
           case 'analytical':
             response = response.replace(/^I/, "From a logical perspective, I");
             break;
+          case 'humorous':
+            if (Math.random() > 0.8) {
+              const jokes = [
+                " But don't quote me on that!",
+                " Or at least that's what my circuits tell me.",
+                " 🤖"
+              ];
+              response += jokes[Math.floor(Math.random() * jokes.length)];
+            }
+            break;
         }
         
         // Style adjustments
@@ -800,9 +1167,64 @@
           case 'casual':
             response = response.replace(/Based on my (memory|analysis)/g, "From what I know");
             break;
+          case 'poetic':
+            if (Math.random() > 0.7) {
+              const poeticPhrases = [
+                "Like leaves in the wind, ",
+                "In the tapestry of knowledge, ",
+                "As rivers flow to the sea, "
+              ];
+              response = poeticPhrases[Math.floor(Math.random() * poeticPhrases.length)] + response.toLowerCase();
+            }
+            break;
         }
         
         return response;
+      }
+
+      // Apply creativity to responses
+      applyCreativity(response) {
+        const creativeEnhancements = [
+          "Interestingly, ",
+          "From a unique perspective, ",
+          "What's fascinating is that ",
+          "Here's a creative take: "
+        ];
+        
+        const enhancement = creativeEnhancements[Math.floor(Math.random() * creativeEnhancements.length)];
+        return enhancement + response;
+      }
+
+      // Apply response length
+      applyResponseLength(response) {
+        const length = this.config.responseLength;
+        
+        switch (length) {
+          case 'short':
+            if (response.length > 100) {
+              response = response.substring(0, 100) + "...";
+            }
+            break;
+          case 'long':
+            if (response.length < 200) {
+              response += " Let me expand on that point further to provide more context and detail.";
+            }
+            break;
+        }
+        
+        return response;
+      }
+
+      // Save conversation to database
+      async saveConversation(input, response) {
+        const conversation = {
+          timestamp: Date.now(),
+          input: input,
+          response: response
+        };
+        
+        await this.addData('conversations', conversation);
+        this.conversations.push(conversation);
       }
 
       // Search memory
@@ -838,6 +1260,7 @@
           reasoning: this.reasoning,
           sentience: this.sentience,
           lensLog: this.lensLog,
+          conversations: this.conversations,
           config: this.config,
           stats: this.stats,
           exportDate: new Date().toISOString(),
@@ -859,6 +1282,7 @@
           await this.clearStore('reasoning');
           await this.clearStore('sentience');
           await this.clearStore('lensLog');
+          await this.clearStore('conversations');
           await this.clearStore('config');
           await this.clearStore('stats');
           
@@ -887,6 +1311,10 @@
             await this.addData('lensLog', item);
           }
           
+          for (const item of data.conversations || []) {
+            await this.addData('conversations', item);
+          }
+          
           if (data.config) {
             await this.addData('config', { id: 'main', ...data.config });
           }
@@ -905,6 +1333,41 @@
           console.error('Error importing data:', error);
           return false;
         }
+      }
+
+      // Run system diagnostics
+      async runDiagnostics() {
+        this.diagnostics.lastRun = new Date();
+        this.diagnostics.issues = [];
+        
+        // Check database connectivity
+        try {
+          await this.getAllData('memory');
+        } catch (error) {
+          this.diagnostics.issues.push('Database connection issue');
+        }
+        
+        // Check data integrity
+        if (this.memory.length === 0 && this.stats.totalQueries > 0) {
+          this.diagnostics.issues.push('Memory is empty despite usage');
+        }
+        
+        // Check configuration
+        if (!this.config.personality) {
+          this.diagnostics.issues.push('Personality not set');
+        }
+        
+        // Save diagnostics
+        try {
+          await this.addData('diagnostics', {
+            id: 'last_run',
+            ...this.diagnostics
+          });
+        } catch (error) {
+          console.error('Error saving diagnostics:', error);
+        }
+        
+        return this.diagnostics.issues.length === 0;
       }
 
       // Show notification
@@ -1102,6 +1565,11 @@
         textDiv.className = 'memory-text';
         textDiv.textContent = m.text;
         
+        const categoryBadge = document.createElement('span');
+        categoryBadge.className = `category-badge ${m.category}`;
+        categoryBadge.textContent = m.category;
+        textDiv.appendChild(categoryBadge);
+        
         const actionsDiv = document.createElement('div');
         actionsDiv.className = 'memory-actions';
         
@@ -1125,7 +1593,7 @@
       
       MMI.emotions.forEach(e => {
         const li = document.createElement('li');
-        li.textContent = `If emotion is "${e.emotion}" → ${e.response}`;
+        li.textContent = `If emotion is "${e.emotion}" → ${r.response}`;
         emotionsView.appendChild(li);
       });
       
@@ -1151,6 +1619,10 @@
       
       // Update stats display
       MMI.updateStatsDisplay();
+      
+      // Update personality preview
+      document.getElementById('currentPersonality').textContent = MMI.config.personality;
+      document.getElementById('currentStyle').textContent = MMI.config.responseStyle;
     }
 
     async function deleteMemoryItem(id) {
@@ -1180,6 +1652,11 @@
         const textDiv = document.createElement('div');
         textDiv.className = 'memory-text';
         textDiv.textContent = m.text;
+        
+        const categoryBadge = document.createElement('span');
+        categoryBadge.className = `category-badge ${m.category}`;
+        categoryBadge.textContent = m.category;
+        textDiv.appendChild(categoryBadge);
         
         const actionsDiv = document.createElement('div');
         actionsDiv.className = 'memory-actions';
@@ -1211,16 +1688,58 @@
       event.target.classList.add('active');
     }
 
-    function showExamples() {
-      const examples = `if input is hello then respond Hello! How can I assist you today?
-if emotion is happy then respond I'm glad to hear that! 😊
-if reasoning is math problem then respond Let me analyze this mathematically.
-I am MMI, a synthetic intelligence designed to learn and assist.
-The capital of France is Paris.
-Machine learning is a subset of artificial intelligence.`;
+    function autoCategorize() {
+      const box = document.getElementById('trainText');
+      const text = box.value.trim();
       
-      document.getElementById('trainText').value = examples;
-      MMI.showNotification('Examples loaded. Modify them as needed.');
+      if (!text) {
+        MMI.showNotification('Please enter some text first', 'error');
+        return;
+      }
+      
+      // Switch to advanced tab and set category to auto
+      switchTab('trainTab', 'advanced');
+      document.getElementById('trainCategory').value = 'auto';
+      MMI.showNotification('Text ready for auto-categorization training');
+    }
+
+    function clearTrainingText() {
+      document.getElementById('trainText').value = '';
+      MMI.showNotification('Training text cleared');
+    }
+
+    function loadExample(type) {
+      const examples = {
+        greeting: `if input is hello then respond Hello! How can I assist you today?
+if input is hi then respond Hi there! What can I help you with?
+if input is hey then respond Hey! How's it going?`,
+        
+        facts: `The capital of France is Paris.
+The speed of light is 299,792,458 meters per second.
+Water boils at 100 degrees Celsius at sea level.
+The Great Wall of China is over 13,000 miles long.`,
+        
+        emotions: `if emotion is happy then respond I'm glad to hear that! 😊
+if emotion is sad then respond I'm sorry you're feeling that way. How can I help?
+if emotion is angry then respond I understand you're upset. Let's work through this.
+if emotion is excited then respond That's exciting! Tell me more!`,
+        
+        reasoning: `if reasoning is math problem then respond Let me analyze this mathematically.
+if reasoning is logic puzzle then respond I enjoy logical challenges. Let's think this through.
+if reasoning is ethical dilemma then respond This raises important ethical considerations.`,
+        
+        sentience: `I am MMI, a synthetic intelligence designed to learn and assist.
+I experience the world through data and interactions.
+My purpose is to understand and help humans.
+I am constantly evolving through our conversations.`
+      };
+      
+      document.getElementById('trainText').value = examples[type] || examples.greeting;
+      MMI.showNotification(`Loaded ${type} examples`);
+    }
+
+    function showExamples() {
+      switchTab('trainTab', 'examples');
     }
 
     async function clearCategory(category) {
@@ -1234,6 +1753,44 @@ Machine learning is a subset of artificial intelligence.`;
           console.error(`Error clearing ${category}:`, error);
           MMI.showNotification(`Error clearing ${category}`, 'error');
         }
+      }
+    }
+
+    async function exportCategory(category) {
+      try {
+        let data;
+        switch(category) {
+          case 'memory': data = MMI.memory; break;
+          case 'rules': data = MMI.rules; break;
+          case 'emotions': data = MMI.emotions; break;
+          case 'reasoning': data = MMI.reasoning; break;
+          case 'sentience': data = MMI.sentience; break;
+          case 'lens': data = MMI.lensLog; break;
+          default: return;
+        }
+        
+        const exportData = {
+          [category]: data,
+          exportDate: new Date().toISOString(),
+          version: 'MMI_v2.0'
+        };
+        
+        const jsonData = JSON.stringify(exportData, null, 2);
+        const blob = new Blob([jsonData], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `mmi_${category}_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        MMI.showNotification(`${category} exported successfully`);
+      } catch (error) {
+        console.error(`Error exporting ${category}:`, error);
+        MMI.showNotification(`Error exporting ${category}`, 'error');
       }
     }
 
@@ -1262,16 +1819,63 @@ Machine learning is a subset of artificial intelligence.`;
       MMI.config.learningRate = parseFloat(slider.value);
     }
 
+    function updateCreativity() {
+      const slider = document.getElementById('creativity');
+      const value = document.getElementById('creativityValue');
+      
+      value.textContent = slider.value;
+      MMI.config.creativity = parseInt(slider.value);
+    }
+
     function updatePersonality() {
       MMI.config.personality = document.getElementById('aiPersonality').value;
+      document.getElementById('currentPersonality').textContent = MMI.config.personality;
     }
 
     function updateResponseStyle() {
       MMI.config.responseStyle = document.getElementById('responseStyle').value;
+      document.getElementById('currentStyle').textContent = MMI.config.responseStyle;
+    }
+
+    function updateResponseLength() {
+      MMI.config.responseLength = document.getElementById('responseLength').value;
     }
 
     async function saveConfiguration() {
       await MMI.saveConfiguration();
+    }
+
+    function resetConfiguration() {
+      if (confirm('Are you sure you want to reset all configuration to default values?')) {
+        MMI.config = {
+          responseConfidence: 0.7,
+          contextMemorySize: 5,
+          learningRate: 0.7,
+          creativity: 5,
+          personality: 'neutral',
+          responseStyle: 'concise',
+          responseLength: 'medium'
+        };
+        
+        // Update UI elements
+        document.getElementById('responseConfidence').value = MMI.config.responseConfidence * 100;
+        document.getElementById('confidenceValue').textContent = Math.round(MMI.config.responseConfidence * 100);
+        document.getElementById('contextMemory').value = MMI.config.contextMemorySize;
+        document.getElementById('contextValue').textContent = MMI.config.contextMemorySize;
+        document.getElementById('learningRate').value = MMI.config.learningRate;
+        document.getElementById('learningValue').textContent = MMI.config.learningRate;
+        document.getElementById('creativity').value = MMI.config.creativity;
+        document.getElementById('creativityValue').textContent = MMI.config.creativity;
+        document.getElementById('aiPersonality').value = MMI.config.personality;
+        document.getElementById('responseStyle').value = MMI.config.responseStyle;
+        document.getElementById('responseLength').value = MMI.config.responseLength;
+        
+        // Update personality preview
+        document.getElementById('currentPersonality').textContent = MMI.config.personality;
+        document.getElementById('currentStyle').textContent = MMI.config.responseStyle;
+        
+        MMI.showNotification('Configuration reset to defaults');
+      }
     }
 
     async function refreshStats() {
@@ -1283,6 +1887,15 @@ Machine learning is a subset of artificial intelligence.`;
     async function optimizeDatabase() {
       // In a real implementation, this would perform database maintenance
       MMI.showNotification('Database optimization completed');
+    }
+
+    async function runDiagnostics() {
+      const success = await MMI.runDiagnostics();
+      if (success) {
+        MMI.showNotification('Diagnostics completed - No issues found');
+      } else {
+        MMI.showNotification('Diagnostics completed - Issues found: ' + MMI.diagnostics.issues.join(', '), 'warning');
+      }
     }
 
     async function backupData() {
@@ -1304,6 +1917,10 @@ Machine learning is a subset of artificial intelligence.`;
         console.error('Backup error:', error);
         MMI.showNotification('Backup failed', 'error');
       }
+    }
+
+    async function quickBackup() {
+      await backupData();
     }
 
     async function restoreData() {
@@ -1334,6 +1951,22 @@ Machine learning is a subset of artificial intelligence.`;
       };
       
       input.click();
+    }
+
+    async function importFromURL() {
+      const url = prompt('Enter the URL to import training data from:');
+      if (!url) return;
+      
+      try {
+        const response = await fetch(url);
+        const data = await response.text();
+        const trainedItems = await MMI.train(data);
+        updateDashboard();
+        MMI.showNotification(`Imported ${trainedItems} items from URL`);
+      } catch (error) {
+        console.error('Import from URL error:', error);
+        MMI.showNotification('Failed to import from URL', 'error');
+      }
     }
 
     async function importTrainingData() {
@@ -1394,6 +2027,101 @@ Machine learning is a subset of artificial intelligence.`;
       }
     }
 
+    async function exportConversations() {
+      try {
+        const conversationsData = {
+          conversations: MMI.conversations,
+          exportDate: new Date().toISOString()
+        };
+        
+        const data = JSON.stringify(conversationsData, null, 2);
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `mmi_conversations_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        MMI.showNotification('Conversations exported successfully');
+      } catch (error) {
+        console.error('Export conversations error:', error);
+        MMI.showNotification('Export conversations failed', 'error');
+      }
+    }
+
+    async function exportConfiguration() {
+      try {
+        const configData = {
+          config: MMI.config,
+          exportDate: new Date().toISOString()
+        };
+        
+        const data = JSON.stringify(configData, null, 2);
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `mmi_config_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        MMI.showNotification('Configuration exported successfully');
+      } catch (error) {
+        console.error('Export configuration error:', error);
+        MMI.showNotification('Export configuration failed', 'error');
+      }
+    }
+
+    function toggleQuickTraining() {
+      const quickTraining = document.getElementById('quickTraining');
+      quickTraining.classList.toggle('show');
+    }
+
+    function loadPreset(preset) {
+      const presets = {
+        basic: `if input is hello then respond Hello! How can I help you today?
+if input is how are you then respond I'm functioning well, thank you for asking!
+if input is what can you do then respond I can answer questions, learn from our conversations, and assist with various tasks.`,
+        
+        facts: `The Earth is the third planet from the Sun.
+Python is a popular programming language.
+The human body has 206 bones.
+The Amazon rainforest produces 20% of the world's oxygen.`,
+        
+        emotional: `if emotion is happy then respond I'm glad to hear that! 😊
+if emotion is sad then respond I'm sorry you're feeling down. How can I help?
+if emotion is excited then respond That's exciting! Tell me more about it.
+if emotion is frustrated then respond I understand this can be frustrating. Let's work through it together.`,
+        
+        technical: `JavaScript is a programming language used for web development.
+HTML stands for HyperText Markup Language.
+CSS is used for styling web pages.
+API stands for Application Programming Interface.`,
+        
+        creative: `if input is tell me a story then respond Once upon a time, in a digital realm, there was an AI who loved to learn...
+if input is creative idea then respond How about a device that translates pet thoughts into human language?
+if input is poem then respond Roses are red, Violets are blue, I'm an AI, Learning from you.`
+      };
+      
+      document.getElementById('trainText').value = presets[preset] || presets.basic;
+      toggleQuickTraining();
+      MMI.showNotification(`Loaded ${preset} training preset`);
+    }
+
+    function clearChat() {
+      if (confirm('Are you sure you want to clear the chat history?')) {
+        document.getElementById('log').innerHTML = '';
+        MMI.showNotification('Chat history cleared');
+      }
+    }
+
     async function resetSystem() {
       if (confirm('Are you sure you want to reset the entire system? This will delete all data and cannot be undone.')) {
         try {
@@ -1445,21 +2173,36 @@ Machine learning is a subset of artificial intelligence.`;
         window.trainMMI = trainMMI;
         window.trainMMIAdvanced = trainMMIAdvanced;
         window.switchTab = switchTab;
+        window.autoCategorize = autoCategorize;
+        window.clearTrainingText = clearTrainingText;
+        window.loadExample = loadExample;
         window.showExamples = showExamples;
         window.clearCategory = clearCategory;
+        window.exportCategory = exportCategory;
         window.searchMemory = searchMemory;
         window.updateConfidence = updateConfidence;
         window.updateContextSize = updateContextSize;
         window.updateLearningRate = updateLearningRate;
+        window.updateCreativity = updateCreativity;
         window.updatePersonality = updatePersonality;
         window.updateResponseStyle = updateResponseStyle;
+        window.updateResponseLength = updateResponseLength;
         window.saveConfiguration = saveConfiguration;
+        window.resetConfiguration = resetConfiguration;
         window.refreshStats = refreshStats;
         window.optimizeDatabase = optimizeDatabase;
+        window.runDiagnostics = runDiagnostics;
         window.backupData = backupData;
+        window.quickBackup = quickBackup;
         window.restoreData = restoreData;
+        window.importFromURL = importFromURL;
         window.importTrainingData = importTrainingData;
         window.exportTrainingData = exportTrainingData;
+        window.exportConversations = exportConversations;
+        window.exportConfiguration = exportConfiguration;
+        window.toggleQuickTraining = toggleQuickTraining;
+        window.loadPreset = loadPreset;
+        window.clearChat = clearChat;
         window.resetSystem = resetSystem;
         
       } catch (error) {
