@@ -51,7 +51,7 @@
       font-size: 10px;
       color: var(--green);
     }
-    #chat, #trainer, #dashboard, #advanced {
+    #chat, #trainer, #dashboard, #advanced, #websearch {
       background: var(--panel);
       border: 1px solid var(--blue);
       padding: 15px;
@@ -60,11 +60,12 @@
       box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
       transition: all 0.3s ease;
     }
-    #chat:hover, #trainer:hover, #dashboard:hover, #advanced:hover {
+    #chat:hover, #trainer:hover, #dashboard:hover, #advanced:hover, #websearch:hover {
       box-shadow: 0 0 20px rgba(74, 195, 255, 0.2);
     }
     #dashboard { border-color: var(--purple); }
     #advanced { border-color: var(--green); }
+    #websearch { border-color: var(--orange); }
     #log {
       height: 240px;
       background: #1a1a1f;
@@ -77,7 +78,7 @@
       font-size: 14px;
       line-height: 1.4;
     }
-    #userInput, textarea, select {
+    #userInput, textarea, select, input[type="text"] {
       width: 100%;
       padding: 10px;
       background: #222;
@@ -86,7 +87,7 @@
       border-radius: 6px;
       transition: all 0.3s ease;
     }
-    #userInput:focus, textarea:focus, select:focus {
+    #userInput:focus, textarea:focus, select:focus, input[type="text"]:focus {
       outline: none;
       border-color: var(--teal);
       box-shadow: 0 0 8px rgba(74, 255, 216, 0.3);
@@ -138,7 +139,7 @@
       margin-top: 6px; 
       color: var(--teal);
     }
-    #memoryView, #rulesView, #emotionsView, #reasoningView, #sentienceView, #lensView, #statsView {
+    #memoryView, #rulesView, #emotionsView, #reasoningView, #sentienceView, #lensView, #statsView, #searchResults {
       background: #1a1a1f;
       border: 1px solid var(--line);
       padding: 10px;
@@ -409,6 +410,32 @@
       background: #2a2a2f;
       transform: translateX(3px);
     }
+    .search-result {
+      padding: 8px;
+      margin: 5px 0;
+      background: #222;
+      border-radius: 5px;
+      border-left: 3px solid var(--orange);
+    }
+    .search-result-title {
+      font-weight: bold;
+      color: var(--teal);
+      margin-bottom: 5px;
+    }
+    .search-result-snippet {
+      font-size: 12px;
+      opacity: 0.8;
+    }
+    .search-result-actions {
+      margin-top: 5px;
+      display: flex;
+      gap: 5px;
+    }
+    .search-loading {
+      text-align: center;
+      padding: 10px;
+      color: var(--orange);
+    }
   </style>
 </head>
 <body>
@@ -423,6 +450,17 @@
       <span id="statusText">System Ready</span>
       <span id="memoryStats">Memory: 0 items</span>
     </div>
+  </div>
+
+  <div id="websearch">
+    <h2>Web Search (DuckDuckGo)</h2>
+    <div class="search-box">
+      <input type="text" id="searchQuery" placeholder="Enter search query..." />
+      <button onclick="performWebSearch()">Search</button>
+      <button class="secondary" onclick="clearSearchResults()">Clear Results</button>
+    </div>
+    <div id="searchResults"></div>
+    <p class="hint">Search the web using DuckDuckGo. Results can be used to train MMI.</p>
   </div>
 
   <div id="trainer">
@@ -618,7 +656,7 @@
       constructor() {
         this.db = null;
         this.dbName = 'MMI_Database';
-        this.dbVersion = 3; // Updated version for new features
+        this.dbVersion = 4; // Updated version for web search
         this.memory = [];
         this.lensLog = [];
         this.rules = [];
@@ -627,6 +665,7 @@
         this.sentience = [];
         this.context = [];
         this.conversations = [];
+        this.searchResults = [];
         this.config = {
           responseConfidence: 0.7,
           contextMemorySize: 5,
@@ -634,13 +673,15 @@
           creativity: 5,
           personality: 'neutral',
           responseStyle: 'concise',
-          responseLength: 'medium'
+          responseLength: 'medium',
+          enableWebSearch: true
         };
         this.stats = {
           totalQueries: 0,
           successfulResponses: 0,
           trainingSessions: 0,
           memoryItems: 0,
+          webSearches: 0,
           lastActive: null,
           systemUptime: 0,
           startTime: Date.now()
@@ -727,6 +768,15 @@
                 db.createObjectStore('diagnostics', { keyPath: 'id' });
               }
             }
+            
+            // Add search results store in version 4
+            if (oldVersion < 4) {
+              if (!db.objectStoreNames.contains('searchResults')) {
+                const searchStore = db.createObjectStore('searchResults', { keyPath: 'id', autoIncrement: true });
+                searchStore.createIndex('query', 'query', { unique: false });
+                searchStore.createIndex('timestamp', 'timestamp', { unique: false });
+              }
+            }
           };
         });
       }
@@ -783,6 +833,7 @@
           this.reasoning = await this.getAllData('reasoning');
           this.sentience = await this.getAllData('sentience');
           this.conversations = await this.getAllData('conversations');
+          this.searchResults = await this.getAllData('searchResults');
           
           // Update stats
           this.stats.memoryItems = this.memory.length;
@@ -911,6 +962,7 @@
             <div class="stat-item">Successful Responses: <span class="stat-value">${this.stats.successfulResponses}</span></div>
             <div class="stat-item">Training Sessions: <span class="stat-value">${this.stats.trainingSessions}</span></div>
             <div class="stat-item">Memory Items: <span class="stat-value">${this.stats.memoryItems}</span></div>
+            <div class="stat-item">Web Searches: <span class="stat-value">${this.stats.webSearches}</span></div>
             <div class="stat-item">System Uptime: <span class="stat-value">${uptimeStr}</span></div>
             <div class="stat-item">Last Active: <span class="stat-value">${this.stats.lastActive ? new Date(this.stats.lastActive).toLocaleString() : 'Never'}</span></div>
           `;
@@ -1001,11 +1053,31 @@
         return trainedItems;
       }
 
-      // Enhanced query method with confidence scoring
+      // Enhanced query method with confidence scoring and web search integration
       async query(input) {
         this.stats.totalQueries++;
         
         const lower = input.toLowerCase();
+        
+        // Check if this is a web search request
+        if (this.config.enableWebSearch && (lower.includes('search for') || lower.includes('look up') || lower.startsWith('search '))) {
+          const searchQuery = input.replace(/(search for|look up|search)/i, '').trim();
+          if (searchQuery) {
+            const searchResult = await this.performWebSearch(searchQuery);
+            if (searchResult && searchResult.results && searchResult.results.length > 0) {
+              const topResult = searchResult.results[0];
+              return { 
+                response: `According to my web search: ${topResult.snippet || topResult.title}. ${topResult.url ? `Source: ${topResult.url}` : ''}`,
+                confidence: 0.8
+              };
+            } else {
+              return {
+                response: "I searched but couldn't find relevant information on that topic.",
+                confidence: 0.3
+              };
+            }
+          }
+        }
         
         // Manage context
         if (this.context.length >= this.config.contextMemorySize) {
@@ -1085,9 +1157,9 @@
           }
         }
         
-        // Final fallback
+        // Final fallback - suggest web search
         if (confidence < 0.1) {
-          response = "I don't have enough information to respond accurately. Please train me with more data.";
+          response = "I don't have enough information to respond accurately. Would you like me to search the web for information about this?";
           confidence = 0.1;
         }
         
@@ -1118,6 +1190,78 @@
         await this.saveStats();
         
         return { response, confidence };
+      }
+
+      // Web search using DuckDuckGo API
+      async performWebSearch(query) {
+        if (!query) return null;
+        
+        this.stats.webSearches++;
+        await this.saveStats();
+        
+        try {
+          // Using DuckDuckGo's API - note: this is a simplified approach
+          // In a real implementation, you might need a proxy due to CORS
+          const response = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`);
+          const data = await response.json();
+          
+          const searchResult = {
+            query: query,
+            timestamp: Date.now(),
+            results: []
+          };
+          
+          // Extract results from DuckDuckGo response
+          if (data.Abstract) {
+            searchResult.results.push({
+              title: data.Heading || 'DuckDuckGo Result',
+              snippet: data.Abstract,
+              url: data.AbstractURL
+            });
+          }
+          
+          if (data.Results && data.Results.length > 0) {
+            data.Results.forEach(result => {
+              searchResult.results.push({
+                title: result.Text,
+                snippet: result.FirstURL,
+                url: result.FirstURL
+              });
+            });
+          }
+          
+          if (data.RelatedTopics && data.RelatedTopics.length > 0) {
+            data.RelatedTopics.forEach(topic => {
+              if (topic.Text) {
+                searchResult.results.push({
+                  title: topic.Text.split(' - ')[0] || 'Related Topic',
+                  snippet: topic.Text,
+                  url: topic.FirstURL
+                });
+              }
+            });
+          }
+          
+          // Save search results
+          await this.addData('searchResults', searchResult);
+          this.searchResults.push(searchResult);
+          
+          return searchResult;
+        } catch (error) {
+          console.error('Web search error:', error);
+          // Fallback: Use a mock response for demonstration
+          return {
+            query: query,
+            timestamp: Date.now(),
+            results: [
+              {
+                title: `Search results for "${query}"`,
+                snippet: `This is a simulated search result for "${query}". In a production environment, this would show real search results from DuckDuckGo.`,
+                url: `https://duckduckgo.com/?q=${encodeURIComponent(query)}`
+              }
+            ]
+          };
+        }
       }
 
       // Apply personality to responses
@@ -1261,6 +1405,7 @@
           sentience: this.sentience,
           lensLog: this.lensLog,
           conversations: this.conversations,
+          searchResults: this.searchResults,
           config: this.config,
           stats: this.stats,
           exportDate: new Date().toISOString(),
@@ -1283,6 +1428,7 @@
           await this.clearStore('sentience');
           await this.clearStore('lensLog');
           await this.clearStore('conversations');
+          await this.clearStore('searchResults');
           await this.clearStore('config');
           await this.clearStore('stats');
           
@@ -1313,6 +1459,10 @@
           
           for (const item of data.conversations || []) {
             await this.addData('conversations', item);
+          }
+          
+          for (const item of data.searchResults || []) {
+            await this.addData('searchResults', item);
           }
           
           if (data.config) {
@@ -1540,6 +1690,72 @@
       }
     }
 
+    // Web search function
+    async function performWebSearch() {
+      const queryInput = document.getElementById('searchQuery');
+      const query = queryInput.value.trim();
+      
+      if (!query) {
+        MMI.showNotification('Please enter a search query', 'error');
+        return;
+      }
+      
+      const searchResults = document.getElementById('searchResults');
+      searchResults.innerHTML = '<div class="search-loading">Searching...</div>';
+      
+      try {
+        const result = await MMI.performWebSearch(query);
+        displaySearchResults(result);
+        MMI.showNotification(`Found ${result.results.length} search results`);
+      } catch (error) {
+        console.error('Search error:', error);
+        searchResults.innerHTML = '<div class="search-loading">Search failed. Please try again.</div>';
+        MMI.showNotification('Search failed', 'error');
+      }
+    }
+
+    function displaySearchResults(searchData) {
+      const searchResults = document.getElementById('searchResults');
+      
+      if (!searchData || !searchData.results || searchData.results.length === 0) {
+        searchResults.innerHTML = '<div class="search-loading">No results found</div>';
+        return;
+      }
+      
+      let html = '';
+      searchData.results.forEach((result, index) => {
+        html += `
+          <div class="search-result">
+            <div class="search-result-title">${result.title}</div>
+            <div class="search-result-snippet">${result.snippet}</div>
+            <div class="search-result-actions">
+              <button class="secondary" onclick="trainFromSearchResult(${index})">Train MMI</button>
+              ${result.url ? `<button class="secondary" onclick="window.open('${result.url}', '_blank')">Visit</button>` : ''}
+            </div>
+          </div>
+        `;
+      });
+      
+      searchResults.innerHTML = html;
+    }
+
+    function trainFromSearchResult(index) {
+      const searchResults = document.getElementById('searchResults');
+      const resultElement = searchResults.querySelectorAll('.search-result')[index];
+      const title = resultElement.querySelector('.search-result-title').textContent;
+      const snippet = resultElement.querySelector('.search-result-snippet').textContent;
+      
+      const trainingText = `${title}. ${snippet}`;
+      document.getElementById('trainText').value = trainingText;
+      MMI.showNotification('Search result loaded into training area');
+    }
+
+    function clearSearchResults() {
+      document.getElementById('searchResults').innerHTML = '';
+      document.getElementById('searchQuery').value = '';
+      MMI.showNotification('Search results cleared');
+    }
+
     function updateDashboard() {
       const memoryView = document.getElementById('memoryView');
       const rulesView = document.getElementById('rulesView');
@@ -1593,7 +1809,7 @@
       
       MMI.emotions.forEach(e => {
         const li = document.createElement('li');
-        li.textContent = `If emotion is "${e.emotion}" → ${r.response}`;
+        li.textContent = `If emotion is "${e.emotion}" → ${e.response}`;
         emotionsView.appendChild(li);
       });
       
@@ -1854,7 +2070,8 @@ I am constantly evolving through our conversations.`
           creativity: 5,
           personality: 'neutral',
           responseStyle: 'concise',
-          responseLength: 'medium'
+          responseLength: 'medium',
+          enableWebSearch: true
         };
         
         // Update UI elements
@@ -2150,10 +2367,12 @@ if input is poem then respond Roses are red, Violets are blue, I'm an AI, Learni
         statusText.textContent = 'System Ready';
         MMI.showNotification('MMI System initialized successfully');
         
-        // Set up event listeners
+        // Set up event listeners - FIXED ENTER/SHIFT+ENTER FUNCTIONALITY
         const userInput = document.getElementById('userInput');
         const trainText = document.getElementById('trainText');
+        const searchQuery = document.getElementById('searchQuery');
         
+        // Chat input - Enter sends message
         userInput.addEventListener('keydown', e => {
           if (e.key === 'Enter') {
             e.preventDefault();
@@ -2161,10 +2380,20 @@ if input is poem then respond Roses are red, Violets are blue, I'm an AI, Learni
           }
         });
         
+        // Training textarea - Enter trains, Shift+Enter adds new line
         trainText.addEventListener('keydown', e => {
-          if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
+          if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             trainMMI();
+          }
+          // Shift+Enter will naturally create a new line
+        });
+        
+        // Search input - Enter performs search
+        searchQuery.addEventListener('keydown', e => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            performWebSearch();
           }
         });
         
@@ -2172,6 +2401,9 @@ if input is poem then respond Roses are red, Violets are blue, I'm an AI, Learni
         window.sendMessage = sendMessage;
         window.trainMMI = trainMMI;
         window.trainMMIAdvanced = trainMMIAdvanced;
+        window.performWebSearch = performWebSearch;
+        window.trainFromSearchResult = trainFromSearchResult;
+        window.clearSearchResults = clearSearchResults;
         window.switchTab = switchTab;
         window.autoCategorize = autoCategorize;
         window.clearTrainingText = clearTrainingText;
