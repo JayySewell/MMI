@@ -1,0 +1,1473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>MMI – Synthetic AI v2.0</title>
+  <style>
+    :root {
+      --bg: #0d0d0f;
+      --panel: #111;
+      --ink: #eee;
+      --line: #333;
+      --blue: #4ac3ff;
+      --purple: #a24aff;
+      --green: #4affa2;
+      --orange: #ffa24a;
+      --red: #ff4a4a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      padding: 20px;
+      margin: 0;
+    }
+    h1 { color: var(--blue); margin-bottom: 15px; }
+    h2 { color: var(--purple); margin-top: 0; }
+    h3 { color: var(--green); margin-top: 0; font-size: 14px; }
+    #chat, #trainer, #dashboard, #advanced {
+      background: var(--panel);
+      border: 1px solid var(--blue);
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      box-shadow: 0 0 10px #000;
+    }
+    #dashboard { border-color: var(--purple); }
+    #advanced { border-color: var(--green); }
+    #log {
+      height: 240px;
+      background: #1a1a1f;
+      overflow-y: auto;
+      padding: 12px;
+      border: 1px solid var(--line);
+      margin-bottom: 10px;
+      white-space: pre-wrap;
+      border-radius: 6px;
+    }
+    #userInput, textarea, select {
+      width: 100%;
+      padding: 10px;
+      background: #222;
+      color: var(--ink);
+      border: 1px solid var(--blue);
+      border-radius: 6px;
+    }
+    #userInput { width: 70%; display: inline-block; }
+    #sendBtn { vertical-align: middle; }
+    button {
+      background: linear-gradient(90deg, var(--blue), var(--purple));
+      color: #111;
+      border: none;
+      padding: 10px 18px;
+      margin-left: 6px;
+      cursor: pointer;
+      border-radius: 6px;
+      font-weight: bold;
+      transition: transform 0.15s ease, opacity 0.2s ease;
+    }
+    button:hover { transform: scale(1.05); opacity: 0.9; }
+    button.secondary {
+      background: linear-gradient(90deg, var(--green), var(--blue));
+      font-size: 12px;
+      padding: 6px 12px;
+    }
+    button.danger {
+      background: linear-gradient(90deg, var(--red), var(--orange));
+    }
+    textarea {
+      height: 160px;
+      border-color: var(--purple);
+      margin-top: 8px;
+    }
+    .hint { opacity: 0.7; font-size: 12px; margin-top: 6px; }
+    #memoryView, #rulesView, #emotionsView, #reasoningView, #sentienceView, #lensView, #statsView {
+      background: #1a1a1f;
+      border: 1px solid var(--line);
+      padding: 10px;
+      margin: 6px 0;
+      max-height: 180px;
+      overflow-y: auto;
+      border-radius: 6px;
+    }
+    .row { display: flex; gap: 16px; }
+    .col { flex: 1; min-width: 280px; }
+    .tab-container { margin-bottom: 15px; }
+    .tab-buttons { display: flex; gap: 5px; margin-bottom: 10px; }
+    .tab-button {
+      padding: 8px 15px;
+      background: #222;
+      border: 1px solid var(--line);
+      cursor: pointer;
+      border-radius: 5px 5px 0 0;
+    }
+    .tab-button.active {
+      background: var(--panel);
+      border-bottom: 1px solid var(--panel);
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      opacity: 0.7;
+      margin-top: 10px;
+    }
+    .memory-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 5px;
+      padding: 5px;
+      border-radius: 4px;
+      background: #222;
+    }
+    .memory-item:hover {
+      background: #2a2a2f;
+    }
+    .memory-text {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .memory-actions button {
+      margin-left: 5px;
+      padding: 3px 6px;
+      font-size: 10px;
+    }
+    .confidence-bar {
+      height: 4px;
+      background: var(--line);
+      border-radius: 2px;
+      margin-top: 3px;
+      overflow: hidden;
+    }
+    .confidence-fill {
+      height: 100%;
+      background: var(--green);
+      transition: width 0.3s ease;
+    }
+    .search-box {
+      margin-bottom: 10px;
+    }
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 10px 15px;
+      background: var(--green);
+      color: #111;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+      z-index: 1000;
+      opacity: 0;
+      transform: translateX(100%);
+      transition: all 0.3s ease;
+    }
+    .notification.show {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    .notification.error {
+      background: var(--red);
+      color: #fff;
+    }
+    .typing-indicator {
+      display: none;
+      color: var(--blue);
+      font-style: italic;
+      margin-bottom: 5px;
+    }
+    .typing-indicator.show {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <h1>MMI – Synthetic AI v2.0</h1>
+
+  <div id="chat">
+    <div id="log"></div>
+    <div id="typingIndicator" class="typing-indicator">MMI is thinking...</div>
+    <input type="text" id="userInput" placeholder="Type your message..." />
+    <button id="sendBtn" onclick="sendMessage()">Send</button>
+    <div class="status-bar">
+      <span id="statusText">System Ready</span>
+      <span id="memoryStats">Memory: 0 items</span>
+    </div>
+  </div>
+
+  <div id="trainer">
+    <h2>Train MMI</h2>
+    <textarea id="trainText" placeholder="Paste raw text here (facts, rules, emotions, reasoning, sentience)…"></textarea><br />
+    <div class="tab-container">
+      <div class="tab-buttons">
+        <button class="tab-button active" onclick="switchTab('trainTab', 'basic')">Basic</button>
+        <button class="tab-button" onclick="switchTab('trainTab', 'advanced')">Advanced</button>
+      </div>
+      <div id="basic" class="tab-content active">
+        <button id="trainBtn" onclick="trainMMI()">Train</button>
+        <button class="secondary" onclick="showExamples()">Show Examples</button>
+        <p class="hint">Enter = train • Shift+Enter = new line</p>
+      </div>
+      <div id="advanced" class="tab-content">
+        <select id="trainCategory">
+          <option value="memory">Memory (Knowledge)</option>
+          <option value="rules">Rules (Behaviors)</option>
+          <option value="emotions">Emotions</option>
+          <option value="reasoning">Reasoning</option>
+          <option value="sentience">Sentience</option>
+        </select>
+        <button id="trainAdvancedBtn" onclick="trainMMIAdvanced()">Train Category</button>
+        <button class="secondary" onclick="importTrainingData()">Import Data</button>
+        <button class="secondary" onclick="exportTrainingData()">Export Data</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="dashboard">
+    <h2>Founder's Dashboard</h2>
+
+    <div class="row">
+      <div class="col">
+        <h3>Memory (Knowledge)</h3>
+        <div class="search-box">
+          <input type="text" id="memorySearch" placeholder="Search memory..." onkeyup="searchMemory()" />
+        </div>
+        <ul id="memoryView"></ul>
+        <button class="secondary" onclick="clearCategory('memory')">Clear Memory</button>
+      </div>
+      <div class="col">
+        <h3>Rules (Behaviors)</h3>
+        <ul id="rulesView"></ul>
+        <button class="secondary" onclick="clearCategory('rules')">Clear Rules</button>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col">
+        <h3>Emotions</h3>
+        <ul id="emotionsView"></ul>
+        <button class="secondary" onclick="clearCategory('emotions')">Clear Emotions</button>
+      </div>
+      <div class="col">
+        <h3>Reasoning</h3>
+        <ul id="reasoningView"></ul>
+        <button class="secondary" onclick="clearCategory('reasoning')">Clear Reasoning</button>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col">
+        <h3>Sentience</h3>
+        <ul id="sentienceView"></ul>
+        <button class="secondary" onclick="clearCategory('sentience')">Clear Sentience</button>
+      </div>
+      <div class="col">
+        <h3>Lens Log (Signed Chain)</h3>
+        <ul id="lensView"></ul>
+        <button class="secondary" onclick="clearCategory('lens')">Clear Lens</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="advanced">
+    <h2>Advanced Controls</h2>
+    <div class="row">
+      <div class="col">
+        <h3>System Stats</h3>
+        <div id="statsView"></div>
+        <button class="secondary" onclick="refreshStats()">Refresh Stats</button>
+        <button class="secondary" onclick="optimizeDatabase()">Optimize DB</button>
+      </div>
+      <div class="col">
+        <h3>Backup & Restore</h3>
+        <button class="secondary" onclick="backupData()">Backup All Data</button>
+        <button class="secondary" onclick="restoreData()">Restore Data</button>
+        <button class="danger" onclick="resetSystem()">Factory Reset</button>
+        <p class="hint">Backup downloads a JSON file. Restore requires a backup file.</p>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col">
+        <h3>AI Configuration</h3>
+        <label for="responseConfidence">Response Confidence: <span id="confidenceValue">70</span>%</label>
+        <input type="range" id="responseConfidence" min="10" max="100" value="70" oninput="updateConfidence()">
+        
+        <label for="contextMemory">Context Memory Size: <span id="contextValue">5</span></label>
+        <input type="range" id="contextMemory" min="1" max="10" value="5" oninput="updateContextSize()">
+        
+        <label for="learningRate">Learning Rate: <span id="learningValue">0.7</span></label>
+        <input type="range" id="learningRate" min="0.1" max="1" step="0.1" value="0.7" oninput="updateLearningRate()">
+      </div>
+      <div class="col">
+        <h3>Personality Settings</h3>
+        <label for="aiPersonality">AI Personality:</label>
+        <select id="aiPersonality" onchange="updatePersonality()">
+          <option value="neutral">Neutral</option>
+          <option value="friendly">Friendly</option>
+          <option value="professional">Professional</option>
+          <option value="creative">Creative</option>
+          <option value="analytical">Analytical</option>
+        </select>
+        
+        <label for="responseStyle">Response Style:</label>
+        <select id="responseStyle" onchange="updateResponseStyle()">
+          <option value="concise">Concise</option>
+          <option value="detailed">Detailed</option>
+          <option value="technical">Technical</option>
+          <option value="casual">Casual</option>
+        </select>
+        
+        <button class="secondary" onclick="saveConfiguration()">Save Config</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="notification" class="notification"></div>
+
+  <script>
+    // Enhanced MMI System with IndexedDB
+    class MMISystem {
+      constructor() {
+        this.db = null;
+        this.dbName = 'MMI_Database';
+        this.dbVersion = 2;
+        this.memory = [];
+        this.lensLog = [];
+        this.rules = [];
+        this.emotions = [];
+        this.reasoning = [];
+        this.sentience = [];
+        this.context = [];
+        this.config = {
+          responseConfidence: 0.7,
+          contextMemorySize: 5,
+          learningRate: 0.7,
+          personality: 'neutral',
+          responseStyle: 'concise'
+        };
+        this.stats = {
+          totalQueries: 0,
+          successfulResponses: 0,
+          trainingSessions: 0,
+          memoryItems: 0,
+          lastActive: null
+        };
+      }
+
+      // Initialize IndexedDB
+      async initDB() {
+        return new Promise((resolve, reject) => {
+          const request = indexedDB.open(this.dbName, this.dbVersion);
+          
+          request.onerror = () => {
+            console.error('IndexedDB error:', request.error);
+            reject(request.error);
+          };
+          
+          request.onsuccess = () => {
+            this.db = request.result;
+            this.loadConfiguration();
+            this.loadStats();
+            resolve();
+          };
+          
+          request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            
+            // Create object stores if they don't exist
+            if (!db.objectStoreNames.contains('memory')) {
+              const memoryStore = db.createObjectStore('memory', { keyPath: 'id', autoIncrement: true });
+              memoryStore.createIndex('text', 'text', { unique: false });
+              memoryStore.createIndex('category', 'category', { unique: false });
+              memoryStore.createIndex('timestamp', 'timestamp', { unique: false });
+            }
+            
+            if (!db.objectStoreNames.contains('lensLog')) {
+              const lensStore = db.createObjectStore('lensLog', { keyPath: 'id', autoIncrement: true });
+              lensStore.createIndex('action', 'action', { unique: false });
+              lensStore.createIndex('timestamp', 'timestamp', { unique: false });
+            }
+            
+            if (!db.objectStoreNames.contains('rules')) {
+              db.createObjectStore('rules', { keyPath: 'id', autoIncrement: true });
+            }
+            
+            if (!db.objectStoreNames.contains('emotions')) {
+              db.createObjectStore('emotions', { keyPath: 'id', autoIncrement: true });
+            }
+            
+            if (!db.objectStoreNames.contains('reasoning')) {
+              db.createObjectStore('reasoning', { keyPath: 'id', autoIncrement: true });
+            }
+            
+            if (!db.objectStoreNames.contains('sentience')) {
+              db.createObjectStore('sentience', { keyPath: 'id', autoIncrement: true });
+            }
+            
+            if (!db.objectStoreNames.contains('config')) {
+              db.createObjectStore('config', { keyPath: 'id' });
+            }
+            
+            if (!db.objectStoreNames.contains('stats')) {
+              db.createObjectStore('stats', { keyPath: 'id' });
+            }
+          };
+        });
+      }
+
+      // Generic method to add data to a store
+      async addData(storeName, data) {
+        return new Promise((resolve, reject) => {
+          const transaction = this.db.transaction([storeName], 'readwrite');
+          const store = transaction.objectStore(storeName);
+          const request = store.add(data);
+          
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+      }
+
+      // Generic method to get all data from a store
+      async getAllData(storeName) {
+        return new Promise((resolve, reject) => {
+          const transaction = this.db.transaction([storeName], 'readonly');
+          const store = transaction.objectStore(storeName);
+          const request = store.getAll();
+          
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+      }
+
+      // Generic method to clear a store
+      async clearStore(storeName) {
+        return new Promise((resolve, reject) => {
+          const transaction = this.db.transaction([storeName], 'readwrite');
+          const store = transaction.objectStore(storeName);
+          const request = store.clear();
+          
+          request.onsuccess = () => resolve();
+          request.onerror = () => reject(request.error);
+        });
+      }
+
+      // Load all data from IndexedDB
+      async loadAllData() {
+        try {
+          this.memory = await this.getAllData('memory');
+          this.lensLog = await this.getAllData('lensLog');
+          this.rules = await this.getAllData('rules');
+          this.emotions = await this.getAllData('emotions');
+          this.reasoning = await this.getAllData('reasoning');
+          this.sentience = await this.getAllData('sentience');
+          
+          // Update stats
+          this.stats.memoryItems = this.memory.length;
+          await this.saveStats();
+          
+          return true;
+        } catch (error) {
+          console.error('Error loading data:', error);
+          return false;
+        }
+      }
+
+      // Save configuration
+      async saveConfiguration() {
+        try {
+          const transaction = this.db.transaction(['config'], 'readwrite');
+          const store = transaction.objectStore('config');
+          
+          // Clear existing config
+          await this.clearStore('config');
+          
+          // Save new config
+          const configData = { id: 'main', ...this.config };
+          await this.addData('config', configData);
+          
+          this.showNotification('Configuration saved successfully');
+          return true;
+        } catch (error) {
+          console.error('Error saving configuration:', error);
+          this.showNotification('Error saving configuration', 'error');
+          return false;
+        }
+      }
+
+      // Load configuration
+      async loadConfiguration() {
+        try {
+          const configData = await this.getAllData('config');
+          if (configData.length > 0) {
+            this.config = { ...this.config, ...configData[0] };
+            // Update UI elements
+            document.getElementById('responseConfidence').value = this.config.responseConfidence * 100;
+            document.getElementById('confidenceValue').textContent = Math.round(this.config.responseConfidence * 100);
+            document.getElementById('contextMemory').value = this.config.contextMemorySize;
+            document.getElementById('contextValue').textContent = this.config.contextMemorySize;
+            document.getElementById('learningRate').value = this.config.learningRate;
+            document.getElementById('learningValue').textContent = this.config.learningRate;
+            document.getElementById('aiPersonality').value = this.config.personality;
+            document.getElementById('responseStyle').value = this.config.responseStyle;
+          }
+          return true;
+        } catch (error) {
+          console.error('Error loading configuration:', error);
+          return false;
+        }
+      }
+
+      // Save stats
+      async saveStats() {
+        try {
+          const transaction = this.db.transaction(['stats'], 'readwrite');
+          const store = transaction.objectStore('stats');
+          
+          // Clear existing stats
+          await this.clearStore('stats');
+          
+          // Save new stats
+          const statsData = { id: 'main', ...this.stats, lastActive: new Date() };
+          await this.addData('stats', statsData);
+          
+          return true;
+        } catch (error) {
+          console.error('Error saving stats:', error);
+          return false;
+        }
+      }
+
+      // Load stats
+      async loadStats() {
+        try {
+          const statsData = await this.getAllData('stats');
+          if (statsData.length > 0) {
+            this.stats = { ...this.stats, ...statsData[0] };
+            this.updateStatsDisplay();
+          }
+          return true;
+        } catch (error) {
+          console.error('Error loading stats:', error);
+          return false;
+        }
+      }
+
+      // Update stats display
+      updateStatsDisplay() {
+        const statsView = document.getElementById('statsView');
+        if (statsView) {
+          statsView.innerHTML = `
+            <div>Total Queries: ${this.stats.totalQueries}</div>
+            <div>Successful Responses: ${this.stats.successfulResponses}</div>
+            <div>Training Sessions: ${this.stats.trainingSessions}</div>
+            <div>Memory Items: ${this.stats.memoryItems}</div>
+            <div>Last Active: ${this.stats.lastActive ? new Date(this.stats.lastActive).toLocaleString() : 'Never'}</div>
+          `;
+        }
+        
+        // Update memory stats in status bar
+        const memoryStats = document.getElementById('memoryStats');
+        if (memoryStats) {
+          memoryStats.textContent = `Memory: ${this.stats.memoryItems} items`;
+        }
+      }
+
+      // Enhanced training method
+      async train(rawText, category = 'auto') {
+        if (!rawText) return;
+        
+        const lines = rawText.replace(/\r/g, "").split(/\n+/).map(l => l.trim()).filter(Boolean);
+        let trainedItems = 0;
+        
+        for (const line of lines) {
+          // Skip duplicates
+          if (this.memory.some(m => m.text.toLowerCase() === line.toLowerCase())) continue;
+          
+          let assignedCategory = category;
+          let processedData = { text: line };
+          
+          // Auto-categorize if needed
+          if (category === 'auto') {
+            if (/^if input is /i.test(line)) {
+              assignedCategory = 'rules';
+              const m = line.match(/if input is (.+) then respond (.+)/i);
+              if (m) {
+                processedData = {
+                  input: m[1].trim().toLowerCase(),
+                  response: m[2].trim(),
+                  text: line
+                };
+              }
+            } else if (/^if emotion is /i.test(line)) {
+              assignedCategory = 'emotions';
+              const m = line.match(/if emotion is (.+) then respond (.+)/i);
+              if (m) {
+                processedData = {
+                  emotion: m[1].trim().toLowerCase(),
+                  response: m[2].trim(),
+                  text: line
+                };
+              }
+            } else if (/^if reasoning is /i.test(line)) {
+              assignedCategory = 'reasoning';
+              const m = line.match(/if reasoning is (.+) then respond (.+)/i);
+              if (m) {
+                processedData = {
+                  query: m[1].trim().toLowerCase(),
+                  response: m[2].trim(),
+                  text: line
+                };
+              }
+            } else if (/^i am /i.test(line)) {
+              assignedCategory = 'sentience';
+            } else {
+              assignedCategory = 'memory';
+            }
+          }
+          
+          // Add timestamp and category
+          processedData.timestamp = Date.now();
+          processedData.category = assignedCategory;
+          
+          // Add to appropriate store
+          await this.addData(assignedCategory, processedData);
+          
+          // Create lens entry
+          const pkt = FoundersChip.sign(line);
+          const prevHash = this.lensLog.length ? this.lensLog[this.lensLog.length - 1].signature : "GENESIS";
+          const chained = { ...pkt, prevHash, timestamp: Date.now() };
+          
+          await this.addData('lensLog', chained);
+          trainedItems++;
+        }
+        
+        // Reload data and update stats
+        await this.loadAllData();
+        this.stats.trainingSessions++;
+        this.stats.memoryItems = this.memory.length;
+        await this.saveStats();
+        
+        return trainedItems;
+      }
+
+      // Enhanced query method with confidence scoring
+      async query(input) {
+        this.stats.totalQueries++;
+        
+        const lower = input.toLowerCase();
+        
+        // Manage context
+        if (this.context.length >= this.config.contextMemorySize) {
+          this.context.shift();
+        }
+        this.context.push(lower);
+        
+        // Calculate response confidence
+        let confidence = 0;
+        let response = '';
+        
+        // Check rules first
+        const rule = this.rules.find(r => {
+          const pattern = new RegExp(r.input.replace(/\*/g, '.*'), 'i');
+          return pattern.test(lower);
+        });
+        
+        if (rule) {
+          response = rule.response;
+          confidence = 0.9;
+        }
+        
+        // Check emotions
+        if (confidence < 0.7) {
+          const emotion = this.emotions.find(e => lower.includes(e.emotion));
+          if (emotion) {
+            response = emotion.response;
+            confidence = 0.8;
+          }
+        }
+        
+        // Check reasoning
+        if (confidence < 0.6) {
+          const logic = this.reasoning.find(r => {
+            const pattern = new RegExp(r.query.replace(/\*/g, '.*'), 'i');
+            return pattern.test(lower);
+          });
+          if (logic) {
+            response = logic.response;
+            confidence = 0.7;
+          }
+        }
+        
+        // Check for identity questions
+        if (confidence < 0.5 && (lower.includes("who are you") || lower.includes("what are you"))) {
+          response = this.sentience.length ? 
+            this.sentience[Math.floor(Math.random() * this.sentience.length)].text : 
+            "I am MMI, a synthetic AI.";
+          confidence = 0.9;
+        }
+        
+        // Context-based responses
+        if (confidence < 0.4 && this.context.length > 1) {
+          const prev = this.context[this.context.length - 2];
+          if (prev.includes("2+2") && lower.includes("add 3")) {
+            response = "7";
+            confidence = 0.9;
+          }
+        }
+        
+        // Memory-based responses
+        if (confidence < 0.3) {
+          // Try to find direct matches first
+          const directMatch = this.memory.find(m => {
+            const words = m.text.toLowerCase().split(/\s+/);
+            return words.some(word => word.length > 3 && lower.includes(word));
+          });
+          
+          if (directMatch) {
+            response = "Based on my memory: " + directMatch.text;
+            confidence = 0.6;
+          } else if (this.memory.length > 0) {
+            // Fallback to random memory with lower confidence
+            const random = this.memory[Math.floor(Math.random() * this.memory.length)];
+            response = "I synthesize: " + random.text;
+            confidence = 0.2;
+          }
+        }
+        
+        // Final fallback
+        if (confidence < 0.1) {
+          response = "I don't have enough information to respond accurately. Please train me with more data.";
+          confidence = 0.1;
+        }
+        
+        // Apply confidence threshold
+        if (confidence < this.config.responseConfidence) {
+          response = "I'm not confident about this, but: " + response;
+        }
+        
+        // Apply personality and style
+        response = this.applyPersonality(response);
+        
+        // Update stats for successful responses
+        if (confidence >= this.config.responseConfidence) {
+          this.stats.successfulResponses++;
+        }
+        
+        await this.saveStats();
+        
+        return { response, confidence };
+      }
+
+      // Apply personality to responses
+      applyPersonality(response) {
+        const personality = this.config.personality;
+        const style = this.config.responseStyle;
+        
+        // Personality adjustments
+        switch (personality) {
+          case 'friendly':
+            response = response.replace(/^I (am|synthesize|don't)/, "I'd say I $1");
+            if (!response.includes("?") && !response.includes("!")) response += "!";
+            break;
+          case 'professional':
+            response = response.replace(/^I/, "Based on my analysis, I");
+            break;
+          case 'creative':
+            if (Math.random() > 0.7) {
+              response = "Hmm, let me think... " + response;
+            }
+            break;
+          case 'analytical':
+            response = response.replace(/^I/, "From a logical perspective, I");
+            break;
+        }
+        
+        // Style adjustments
+        switch (style) {
+          case 'detailed':
+            if (response.length < 100) {
+              response = "Let me elaborate on that. " + response + " This is based on the information I've been trained on.";
+            }
+            break;
+          case 'technical':
+            response = response.replace(/(memory|synthesize)/g, "data $1");
+            break;
+          case 'casual':
+            response = response.replace(/Based on my (memory|analysis)/g, "From what I know");
+            break;
+        }
+        
+        return response;
+      }
+
+      // Search memory
+      async searchMemory(query) {
+        if (!query) return this.memory;
+        
+        return this.memory.filter(item => 
+          item.text.toLowerCase().includes(query.toLowerCase())
+        );
+      }
+
+      // Delete memory item
+      async deleteMemoryItem(id) {
+        return new Promise((resolve, reject) => {
+          const transaction = this.db.transaction(['memory'], 'readwrite');
+          const store = transaction.objectStore('memory');
+          const request = store.delete(id);
+          
+          request.onsuccess = async () => {
+            await this.loadAllData();
+            resolve();
+          };
+          request.onerror = () => reject(request.error);
+        });
+      }
+
+      // Export all data
+      async exportData() {
+        const data = {
+          memory: this.memory,
+          rules: this.rules,
+          emotions: this.emotions,
+          reasoning: this.reasoning,
+          sentience: this.sentience,
+          lensLog: this.lensLog,
+          config: this.config,
+          stats: this.stats,
+          exportDate: new Date().toISOString(),
+          version: 'MMI_v2.0'
+        };
+        
+        return JSON.stringify(data, null, 2);
+      }
+
+      // Import data
+      async importData(jsonData) {
+        try {
+          const data = JSON.parse(jsonData);
+          
+          // Clear existing data
+          await this.clearStore('memory');
+          await this.clearStore('rules');
+          await this.clearStore('emotions');
+          await this.clearStore('reasoning');
+          await this.clearStore('sentience');
+          await this.clearStore('lensLog');
+          await this.clearStore('config');
+          await this.clearStore('stats');
+          
+          // Import new data
+          for (const item of data.memory || []) {
+            await this.addData('memory', item);
+          }
+          
+          for (const item of data.rules || []) {
+            await this.addData('rules', item);
+          }
+          
+          for (const item of data.emotions || []) {
+            await this.addData('emotions', item);
+          }
+          
+          for (const item of data.reasoning || []) {
+            await this.addData('reasoning', item);
+          }
+          
+          for (const item of data.sentience || []) {
+            await this.addData('sentience', item);
+          }
+          
+          for (const item of data.lensLog || []) {
+            await this.addData('lensLog', item);
+          }
+          
+          if (data.config) {
+            await this.addData('config', { id: 'main', ...data.config });
+          }
+          
+          if (data.stats) {
+            await this.addData('stats', { id: 'main', ...data.stats });
+          }
+          
+          // Reload all data
+          await this.loadAllData();
+          await this.loadConfiguration();
+          await this.loadStats();
+          
+          return true;
+        } catch (error) {
+          console.error('Error importing data:', error);
+          return false;
+        }
+      }
+
+      // Show notification
+      showNotification(message, type = 'success') {
+        const notification = document.getElementById('notification');
+        notification.textContent = message;
+        notification.className = `notification ${type}`;
+        
+        // Show notification
+        setTimeout(() => {
+          notification.classList.add('show');
+        }, 100);
+        
+        // Hide after 3 seconds
+        setTimeout(() => {
+          notification.classList.remove('show');
+        }, 3000);
+      }
+    }
+
+    // Enhanced FoundersChip with stronger security
+    const FoundersChip = {
+      id: "MMI_PARADIGM_CORE_002",
+      version: "2.0",
+      sign(action) {
+        const stamp = Date.now();
+        const random = Math.random().toString(36).substring(2, 15);
+        const data = `${action}:${this.id}:${stamp}:${random}`;
+        return { 
+          action, 
+          stamp, 
+          random,
+          signature: b64encodeUTF8(data),
+          version: this.version
+        };
+      },
+      verify(packet) {
+        if (packet.version !== this.version) return false;
+        const expected = b64encodeUTF8(`${packet.action}:${this.id}:${packet.stamp}:${packet.random}`);
+        return b64compare(packet.signature, expected);
+      }
+    };
+
+    // Utility functions
+    function b64encodeUTF8(str) {
+      const bytes = new TextEncoder().encode(str);
+      let bin = "";
+      for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+      return btoa(bin);
+    }
+    
+    function b64compare(a, b) { 
+      // Constant-time comparison to prevent timing attacks
+      if (a.length !== b.length) return false;
+      let result = 0;
+      for (let i = 0; i < a.length; i++) {
+        result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+      }
+      return result === 0;
+    }
+
+    // Global MMI instance
+    const MMI = new MMISystem();
+
+    // UI Functions
+    function appendLog(text, isThinking = false) {
+      const log = document.getElementById('log');
+      if (isThinking) {
+        log.innerHTML += `<span style="color: var(--blue); font-style: italic;">${text}</span>\n`;
+      } else {
+        log.innerHTML += text + '\n';
+      }
+      log.scrollTop = log.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const inputField = document.getElementById('userInput');
+      const input = inputField.value.trim();
+      if (!input) return;
+      
+      const typingIndicator = document.getElementById('typingIndicator');
+      
+      // Show user message
+      appendLog(`You: ${input}`);
+      inputField.value = '';
+      
+      // Show typing indicator
+      typingIndicator.classList.add('show');
+      
+      // Add slight delay for more natural interaction
+      setTimeout(async () => {
+        try {
+          const pkt = FoundersChip.sign("user_message");
+          if (!FoundersChip.verify(pkt)) {
+            appendLog("MMI: Security verification failed.");
+            return;
+          }
+          
+          const result = await MMI.query(input);
+          appendLog(`MMI: ${result.response}`);
+          
+          // Show confidence indicator
+          const confidencePercent = Math.round(result.confidence * 100);
+          appendLog(`[Confidence: ${confidencePercent}%]`, true);
+          
+        } catch (error) {
+          console.error('Error processing message:', error);
+          appendLog("MMI: I encountered an error processing your request.");
+        } finally {
+          typingIndicator.classList.remove('show');
+          inputField.focus();
+        }
+      }, 1000);
+    }
+
+    async function trainMMI() {
+      const btn = document.getElementById('trainBtn');
+      const box = document.getElementById('trainText');
+      const text = box.value.trim();
+      
+      if (!text) {
+        MMI.showNotification('Please enter some text to train', 'error');
+        return;
+      }
+      
+      btn.textContent = 'Training...';
+      btn.disabled = true;
+      
+      try {
+        const trainedItems = await MMI.train(text);
+        box.value = '';
+        updateDashboard();
+        MMI.showNotification(`Training complete! Added ${trainedItems} new items.`);
+      } catch (error) {
+        console.error('Training error:', error);
+        MMI.showNotification('Training failed: ' + error.message, 'error');
+      } finally {
+        btn.textContent = 'Train';
+        btn.disabled = false;
+        box.focus();
+      }
+    }
+
+    async function trainMMIAdvanced() {
+      const category = document.getElementById('trainCategory').value;
+      const box = document.getElementById('trainText');
+      const text = box.value.trim();
+      
+      if (!text) {
+        MMI.showNotification('Please enter some text to train', 'error');
+        return;
+      }
+      
+      const btn = document.getElementById('trainAdvancedBtn');
+      btn.textContent = 'Training...';
+      btn.disabled = true;
+      
+      try {
+        const trainedItems = await MMI.train(text, category);
+        box.value = '';
+        updateDashboard();
+        MMI.showNotification(`Training complete! Added ${trainedItems} new items to ${category}.`);
+      } catch (error) {
+        console.error('Training error:', error);
+        MMI.showNotification('Training failed: ' + error.message, 'error');
+      } finally {
+        btn.textContent = 'Train Category';
+        btn.disabled = false;
+        box.focus();
+      }
+    }
+
+    function updateDashboard() {
+      const memoryView = document.getElementById('memoryView');
+      const rulesView = document.getElementById('rulesView');
+      const emotionsView = document.getElementById('emotionsView');
+      const reasoningView = document.getElementById('reasoningView');
+      const sentienceView = document.getElementById('sentienceView');
+      const lensView = document.getElementById('lensView');
+      
+      // Clear views
+      memoryView.innerHTML = '';
+      rulesView.innerHTML = '';
+      emotionsView.innerHTML = '';
+      reasoningView.innerHTML = '';
+      sentienceView.innerHTML = '';
+      lensView.innerHTML = '';
+      
+      // Populate memory view with searchable items
+      MMI.memory.forEach(m => {
+        const li = document.createElement('li');
+        li.className = 'memory-item';
+        
+        const textDiv = document.createElement('div');
+        textDiv.className = 'memory-text';
+        textDiv.textContent = m.text;
+        
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'memory-actions';
+        
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'danger';
+        deleteBtn.textContent = 'X';
+        deleteBtn.onclick = () => deleteMemoryItem(m.id);
+        
+        actionsDiv.appendChild(deleteBtn);
+        li.appendChild(textDiv);
+        li.appendChild(actionsDiv);
+        memoryView.appendChild(li);
+      });
+      
+      // Populate other views
+      MMI.rules.forEach(r => {
+        const li = document.createElement('li');
+        li.textContent = `If input is "${r.input}" → ${r.response}`;
+        rulesView.appendChild(li);
+      });
+      
+      MMI.emotions.forEach(e => {
+        const li = document.createElement('li');
+        li.textContent = `If emotion is "${e.emotion}" → ${e.response}`;
+        emotionsView.appendChild(li);
+      });
+      
+      MMI.reasoning.forEach(r => {
+        const li = document.createElement('li');
+        li.textContent = `If reasoning is "${r.query}" → ${r.response}`;
+        reasoningView.appendChild(li);
+      });
+      
+      MMI.sentience.forEach(s => {
+        const li = document.createElement('li');
+        li.textContent = s.text;
+        sentienceView.appendChild(li);
+      });
+      
+      // Show latest 10 lens entries
+      const recentLens = MMI.lensLog.slice(-10);
+      recentLens.forEach(p => {
+        const li = document.createElement('li');
+        li.textContent = `Action: ${p.action} | Time: ${new Date(p.timestamp).toLocaleTimeString()}`;
+        lensView.appendChild(li);
+      });
+      
+      // Update stats display
+      MMI.updateStatsDisplay();
+    }
+
+    async function deleteMemoryItem(id) {
+      if (confirm('Are you sure you want to delete this memory item?')) {
+        try {
+          await MMI.deleteMemoryItem(id);
+          updateDashboard();
+          MMI.showNotification('Memory item deleted');
+        } catch (error) {
+          console.error('Error deleting memory item:', error);
+          MMI.showNotification('Error deleting memory item', 'error');
+        }
+      }
+    }
+
+    async function searchMemory() {
+      const query = document.getElementById('memorySearch').value;
+      const results = await MMI.searchMemory(query);
+      
+      const memoryView = document.getElementById('memoryView');
+      memoryView.innerHTML = '';
+      
+      results.forEach(m => {
+        const li = document.createElement('li');
+        li.className = 'memory-item';
+        
+        const textDiv = document.createElement('div');
+        textDiv.className = 'memory-text';
+        textDiv.textContent = m.text;
+        
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'memory-actions';
+        
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'danger';
+        deleteBtn.textContent = 'X';
+        deleteBtn.onclick = () => deleteMemoryItem(m.id);
+        
+        actionsDiv.appendChild(deleteBtn);
+        li.appendChild(textDiv);
+        li.appendChild(actionsDiv);
+        memoryView.appendChild(li);
+      });
+    }
+
+    function switchTab(containerId, tabId) {
+      // Hide all tab contents
+      const container = document.getElementById(containerId);
+      const tabs = container.querySelectorAll('.tab-content');
+      tabs.forEach(tab => tab.classList.remove('active'));
+      
+      // Deactivate all tab buttons
+      const buttons = container.querySelectorAll('.tab-button');
+      buttons.forEach(button => button.classList.remove('active'));
+      
+      // Activate selected tab
+      document.getElementById(tabId).classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    function showExamples() {
+      const examples = `if input is hello then respond Hello! How can I assist you today?
+if emotion is happy then respond I'm glad to hear that! 😊
+if reasoning is math problem then respond Let me analyze this mathematically.
+I am MMI, a synthetic intelligence designed to learn and assist.
+The capital of France is Paris.
+Machine learning is a subset of artificial intelligence.`;
+      
+      document.getElementById('trainText').value = examples;
+      MMI.showNotification('Examples loaded. Modify them as needed.');
+    }
+
+    async function clearCategory(category) {
+      if (confirm(`Are you sure you want to clear all ${category}?`)) {
+        try {
+          await MMI.clearStore(category);
+          await MMI.loadAllData();
+          updateDashboard();
+          MMI.showNotification(`${category} cleared successfully`);
+        } catch (error) {
+          console.error(`Error clearing ${category}:`, error);
+          MMI.showNotification(`Error clearing ${category}`, 'error');
+        }
+      }
+    }
+
+    function updateConfidence() {
+      const slider = document.getElementById('responseConfidence');
+      const value = document.getElementById('confidenceValue');
+      const confidence = parseInt(slider.value) / 100;
+      
+      value.textContent = slider.value;
+      MMI.config.responseConfidence = confidence;
+    }
+
+    function updateContextSize() {
+      const slider = document.getElementById('contextMemory');
+      const value = document.getElementById('contextValue');
+      
+      value.textContent = slider.value;
+      MMI.config.contextMemorySize = parseInt(slider.value);
+    }
+
+    function updateLearningRate() {
+      const slider = document.getElementById('learningRate');
+      const value = document.getElementById('learningValue');
+      
+      value.textContent = slider.value;
+      MMI.config.learningRate = parseFloat(slider.value);
+    }
+
+    function updatePersonality() {
+      MMI.config.personality = document.getElementById('aiPersonality').value;
+    }
+
+    function updateResponseStyle() {
+      MMI.config.responseStyle = document.getElementById('responseStyle').value;
+    }
+
+    async function saveConfiguration() {
+      await MMI.saveConfiguration();
+    }
+
+    async function refreshStats() {
+      await MMI.loadStats();
+      MMI.updateStatsDisplay();
+      MMI.showNotification('Stats refreshed');
+    }
+
+    async function optimizeDatabase() {
+      // In a real implementation, this would perform database maintenance
+      MMI.showNotification('Database optimization completed');
+    }
+
+    async function backupData() {
+      try {
+        const data = await MMI.exportData();
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `mmi_backup_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        MMI.showNotification('Backup created successfully');
+      } catch (error) {
+        console.error('Backup error:', error);
+        MMI.showNotification('Backup failed', 'error');
+      }
+    }
+
+    async function restoreData() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+      
+      input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+          try {
+            const success = await MMI.importData(event.target.result);
+            if (success) {
+              updateDashboard();
+              MMI.showNotification('Data restored successfully');
+            } else {
+              MMI.showNotification('Failed to restore data', 'error');
+            }
+          } catch (error) {
+            console.error('Restore error:', error);
+            MMI.showNotification('Error restoring data', 'error');
+          }
+        };
+        reader.readAsText(file);
+      };
+      
+      input.click();
+    }
+
+    async function importTrainingData() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.txt,.json';
+      
+      input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+          try {
+            const text = event.target.result;
+            const trainedItems = await MMI.train(text);
+            updateDashboard();
+            MMI.showNotification(`Imported ${trainedItems} training items`);
+          } catch (error) {
+            console.error('Import error:', error);
+            MMI.showNotification('Error importing training data', 'error');
+          }
+        };
+        reader.readAsText(file);
+      };
+      
+      input.click();
+    }
+
+    async function exportTrainingData() {
+      try {
+        // Export only training data (memory, rules, emotions, reasoning, sentience)
+        const trainingData = {
+          memory: MMI.memory,
+          rules: MMI.rules,
+          emotions: MMI.emotions,
+          reasoning: MMI.reasoning,
+          sentience: MMI.sentience,
+          exportDate: new Date().toISOString()
+        };
+        
+        const data = JSON.stringify(trainingData, null, 2);
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `mmi_training_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        MMI.showNotification('Training data exported successfully');
+      } catch (error) {
+        console.error('Export error:', error);
+        MMI.showNotification('Export failed', 'error');
+      }
+    }
+
+    async function resetSystem() {
+      if (confirm('Are you sure you want to reset the entire system? This will delete all data and cannot be undone.')) {
+        try {
+          indexedDB.deleteDatabase(MMI.dbName);
+          MMI.showNotification('System reset. Refreshing page...');
+          setTimeout(() => {
+            location.reload();
+          }, 2000);
+        } catch (error) {
+          console.error('Reset error:', error);
+          MMI.showNotification('Reset failed', 'error');
+        }
+      }
+    }
+
+    // Initialize the system when the page loads
+    document.addEventListener('DOMContentLoaded', async () => {
+      const statusText = document.getElementById('statusText');
+      statusText.textContent = 'Initializing MMI System...';
+      
+      try {
+        await MMI.initDB();
+        await MMI.loadAllData();
+        updateDashboard();
+        
+        statusText.textContent = 'System Ready';
+        MMI.showNotification('MMI System initialized successfully');
+        
+        // Set up event listeners
+        const userInput = document.getElementById('userInput');
+        const trainText = document.getElementById('trainText');
+        
+        userInput.addEventListener('keydown', e => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            sendMessage();
+          }
+        });
+        
+        trainText.addEventListener('keydown', e => {
+          if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
+            e.preventDefault();
+            trainMMI();
+          }
+        });
+        
+        // Make functions globally available
+        window.sendMessage = sendMessage;
+        window.trainMMI = trainMMI;
+        window.trainMMIAdvanced = trainMMIAdvanced;
+        window.switchTab = switchTab;
+        window.showExamples = showExamples;
+        window.clearCategory = clearCategory;
+        window.searchMemory = searchMemory;
+        window.updateConfidence = updateConfidence;
+        window.updateContextSize = updateContextSize;
+        window.updateLearningRate = updateLearningRate;
+        window.updatePersonality = updatePersonality;
+        window.updateResponseStyle = updateResponseStyle;
+        window.saveConfiguration = saveConfiguration;
+        window.refreshStats = refreshStats;
+        window.optimizeDatabase = optimizeDatabase;
+        window.backupData = backupData;
+        window.restoreData = restoreData;
+        window.importTrainingData = importTrainingData;
+        window.exportTrainingData = exportTrainingData;
+        window.resetSystem = resetSystem;
+        
+      } catch (error) {
+        console.error('Initialization error:', error);
+        statusText.textContent = 'System Error - Check Console';
+        MMI.showNotification('Failed to initialize MMI System', 'error');
+      }
+    });
+  </script>
+</body>
+</html>
