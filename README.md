@@ -199,23 +199,26 @@ No builds, no installs, no dependencies — MMI runs as-is.
 
 ---
 
-### 🧬 “Synthetic intelligence isn’t born — it’s trained line by line.”  
-## Features
+## 🧬 **Features**
 - In-browser chat and training interface  
 - Local memory, emotions, and reasoning storage  
 - Cryptographic FoundersChip verification  
 - Adjustable personality, learning rate, and confidence  
 - Backup, restore, and full system reset options  
 
-## Usage
-1. Open `index.html` in any modern browser.
-2. Start chatting or training MMI with text prompts.
+---
+
+## 🧭 **Usage**
+1. Open `index.html` in any modern browser.  
+2. Start chatting or training MMI with text prompts.  
 3. Use the Founder’s Dashboard to view or manage learned data.
 
-## Developer Notes
-MMI is built entirely with HTML, CSS, and JavaScript. No dependencies required.
+---
+
+## 🧠 **Developer Notes (Summary)**
+MMI is built entirely with HTML, CSS, and JavaScript. No dependencies required.  
 To modify behavior, adjust logic within the `MMISystem` class in `index.html`.
 
-## License
-This project is licensed under Creative Commons Attribution 4.0 International (CC BY 4.0).
-See `LICENSE` for full terms.
+---
+
+### 🧬 “Synthetic intelligence isn’t born — it’s trained line by line.”
